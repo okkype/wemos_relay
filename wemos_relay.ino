@@ -12,24 +12,26 @@ boolean pin[9];
 int pinMap[] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
 
 void handleRoot() {
-  String out = "{\"value\":";
+  String out = "{";
   for(int c = 0; c < sizeof(pin); c++) {
-    int stat = pin[c] ? 0 : 1;
-    String out2 = "{\"PIN";
+    int stat = pin[c] ? 1 : 0;
+    String out2 = "\"p";
     out2 += c;
     out2 += "\":";
     out2 += stat;
-    out2 += "},";
+    out2 += " ";
     out += out2;
   }
+  out.trim();
+  out.replace(" ", ",");
   out += "}";
   server.send(200, "application/json", out);
 }
 
 void handlePin(int a, boolean onoff) {
   pin[a] = onoff;
-  int stat = pin[a] ? 0 : 1;
-  digitalWrite(pinMap[a], pin[a]);
+  /* int stat = pin[a] ? 0 : 1; */
+  digitalWrite(pinMap[a], !pin[a]);
   /* handleRoot(); */
 }
 
@@ -77,44 +79,45 @@ void setup(void){
   for(int c = 0; c < sizeof(pin); c++) {
     pinMode(pinMap[c], OUTPUT);
     pin[c] = false;
+    handlePin(c, false);
   }
 
-  server.on("/on", [](){
-    if (server.args()==0) {
-      for(int c = 0; c < sizeof(pin); c++) {
-        handlePin(c, true);
-      }
-    }
-    for (uint8_t i=0; i<server.args(); i++){
-      if (server.argName(i).equals("pin")) {
-        handlePin(server.arg(i).toInt(), true);
-      }
-    }
-    handleRoot();
-  });
-
-  server.on("/off", [](){
+  server.on("/0", [](){
     if (server.args()==0) {
       for(int c = 0; c < sizeof(pin); c++) {
         handlePin(c, false);
       }
     }
     for (uint8_t i=0; i<server.args(); i++){
-      if (server.argName(i).equals("pin")) {
+      if (server.argName(i).equals("p")) {
         handlePin(server.arg(i).toInt(), false);
       }
     }
     handleRoot();
   });
 
-  server.on("/toggle", [](){
+  server.on("/1", [](){
+    if (server.args()==0) {
+      for(int c = 0; c < sizeof(pin); c++) {
+        handlePin(c, true);
+      }
+    }
+    for (uint8_t i=0; i<server.args(); i++){
+      if (server.argName(i).equals("p")) {
+        handlePin(server.arg(i).toInt(), true);
+      }
+    }
+    handleRoot();
+  });
+
+  server.on("/2", [](){
     if (server.args()==0) {
       for(int c = 0; c < sizeof(pin); c++) {
         handlePin(c);
       }
     }
     for (uint8_t i=0; i<server.args(); i++){
-      if (server.argName(i).equals("pin")) {
+      if (server.argName(i).equals("p")) {
         handlePin(server.arg(i).toInt());
       }
     }
