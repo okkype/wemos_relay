@@ -3,8 +3,10 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 
-const char* ssid = "Samsung Z2"; /* wifi ssid */
-const char* password = "poiuytrewq"; /* wifi psk */
+const char* ssid = "SIHIPO"; /* wifi ssid */
+const char* password = "sistemhidroponik"; /* wifi psk */
+const String device_id = "C01";
+const String device_type = "SIHIPO_C";
 
 ESP8266WebServer server(80);
 
@@ -12,19 +14,22 @@ boolean pin[9];
 int pinMap[] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
 
 void handleRoot() {
-  String out = "{";
+  String out = "{\"id\":\"" + device_id + "\",\"type\":\"" + device_type + "\",\"value\":[";
   for(int c = 0; c < sizeof(pin); c++) {
     int stat = pin[c] ? 1 : 0;
-    String out2 = "\"p";
+    /* String out2 = "\"p";
     out2 += c;
     out2 += "\":";
+    out2 += stat;
+    out2 += " "; */
+    String out2 = "";
     out2 += stat;
     out2 += " ";
     out += out2;
   }
   out.trim();
   out.replace(" ", ",");
-  out += "}";
+  out += "]}";
   server.send(200, "application/json", out);
 }
 
@@ -74,13 +79,24 @@ void setup(void){
     Serial.println("MDNS responder started");
   }
 
-  server.on("/", handleRoot);
-
   for(int c = 0; c < sizeof(pin); c++) {
     pinMode(pinMap[c], OUTPUT);
     pin[c] = false;
     handlePin(c, false);
   }
+
+  server.on("/", [](){
+    for (uint8_t i=0; i<server.args(); i++){
+      if (server.argName(i).equals("p")) {
+        boolean ar[sizeof(pin)];
+        for (uint16_t i2 = 0; i2 < sizeof(pin); i2++) {
+          ar[i2] = server.arg(i).toInt() & (1 << i2) ? true : false;
+          handlePin(i2, ar[i2]);
+        }
+      }
+    }
+    handleRoot();
+  });
 
   server.on("/0", [](){
     if (server.args()==0) {
