@@ -7,11 +7,12 @@ const char* ssid = "SIHIPO"; /* wifi ssid */
 const char* password = "sistemhidroponik"; /* wifi psk */
 const String device_id = "C01";
 const String device_type = "SIHIPO_C";
+const boolean isAP = false;
 
 ESP8266WebServer server(80);
 
 boolean pin[9];
-int pinMap[] = {D0, D1, D2, D3, D4, D5, D6, D7, D8};
+int pinMap[] = {D0, D1, D2, D3, D4, D8, D7, D6, D5}; /* Physical PIN Mapping */
 
 void handleRoot() {
   String out = "{\"id\":\"" + device_id + "\",\"type\":\"" + device_type + "\",\"value\":[";
@@ -60,20 +61,30 @@ void handleNotFound(){
 }
 
 void setup(void){
-  Serial.begin(115200);
-  WiFi.begin(ssid, password);
-  Serial.println("");
-
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  if (isAP) {
+    delay(1000);
+    Serial.begin(115200);
+    Serial.println();
+    Serial.print("Configuring access point...");
+    WiFi.softAP(ssid, password);
+  
+    IPAddress myIP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(myIP);
+  } else {
+    Serial.begin(115200);
+    WiFi.begin(ssid, password);
+    Serial.println("");
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(500);
+      Serial.print(".");
+    }
+    Serial.println("");
+    Serial.print("Connected to ");
+    Serial.println(ssid);
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
   }
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
 
   if (MDNS.begin("esp8266")) {
     Serial.println("MDNS responder started");
