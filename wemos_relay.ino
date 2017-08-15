@@ -7,7 +7,7 @@ const char* ssid = "SIHIPO"; /* wifi ssid */
 const char* password = "sistemhidroponik"; /* wifi psk */
 const String device_id = "C01";
 const String device_type = "SIHIPO_C";
-const boolean isAP = false;
+const boolean isAP = true;
 
 ESP8266WebServer server(80);
 
@@ -32,6 +32,32 @@ void handleRoot() {
   out.replace(" ", ",");
   out += "]}";
   server.send(200, "application/json", out);
+}
+
+void handleUI() {
+  String out = "";
+  out += "<html>";
+  out += "  <body>";
+  out += "    <script>";
+  out += "      function setPin(pin, stat) {";
+  out += "        var xhttp = new XMLHttpRequest();";
+  out += "        xhttp.open(\"GET\", \"/\" + stat + \"?p=\" + pin, true);";
+  out += "        xhttp.send();";
+  out += "      }";
+  out += "    </script>";
+  out += "    <pre>";
+  out += "      PIN 01 : <input type=\"button\" value=\"ON\" onclick=\"setPin(1,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(1,0)\" /><br />";
+  out += "      PIN 02 : <input type=\"button\" value=\"ON\" onclick=\"setPin(2,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(2,0)\" /><br />";
+  out += "      PIN 03 : <input type=\"button\" value=\"ON\" onclick=\"setPin(3,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(3,0)\" /><br />";
+  out += "      PIN 04 : <input type=\"button\" value=\"ON\" onclick=\"setPin(4,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(4,0)\" /><br />";
+  out += "      PIN 05 : <input type=\"button\" value=\"ON\" onclick=\"setPin(5,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(5,0)\" /><br />";
+  out += "      PIN 06 : <input type=\"button\" value=\"ON\" onclick=\"setPin(6,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(6,0)\" /><br />";
+  out += "      PIN 07 : <input type=\"button\" value=\"ON\" onclick=\"setPin(7,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(7,0)\" /><br />";
+  out += "      PIN 08 : <input type=\"button\" value=\"ON\" onclick=\"setPin(8,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(8,0)\" /><br />";
+  out += "    </pre>";
+  out += "  </body>";
+  out += "</html>";
+  server.send(200, "text/html", out);
 }
 
 void handlePin(int a, boolean onoff) {
@@ -108,6 +134,8 @@ void setup(void){
     }
     handleRoot();
   });
+
+  server.on("/ui", handleUI);
 
   server.on("/0", [](){
     if (server.args()==0) {
