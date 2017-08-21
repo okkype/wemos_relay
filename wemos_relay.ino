@@ -7,12 +7,12 @@ const char* ssid = "SIHIPO"; /* wifi ssid */
 const char* password = "sistemhidroponik"; /* wifi psk */
 const String device_id = "C01";
 const String device_type = "SIHIPO_C";
-const boolean isAP = true;
+// const boolean isAP = true;
 
 ESP8266WebServer server(80);
 
 boolean pin[9];
-int pinMap[] = {D0, D1, D2, D3, D4, D8, D7, D6, D5}; /* Physical PIN Mapping */
+int pinMap[] = {D1, D2, D3, D4, D8, D7, D6, D5}; /* Physical PIN Mapping */
 
 void handleRoot() {
   String out = "{\"id\":\"" + device_id + "\",\"type\":\"" + device_type + "\",\"value\":[";
@@ -38,23 +38,42 @@ void handleUI() {
   String out = "";
   out += "<html>";
   out += "  <body>";
+  out += "    <pre>";
+  out += "PIN 01 (<span id=\"stat0\">0</span>) : <input type=\"button\" value=\"ON\" onclick=\"setPin(0,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(0,0)\" /><br />";
+  out += "PIN 02 (<span id=\"stat1\">0</span>) : <input type=\"button\" value=\"ON\" onclick=\"setPin(1,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(1,0)\" /><br />";
+  out += "PIN 03 (<span id=\"stat2\">0</span>) : <input type=\"button\" value=\"ON\" onclick=\"setPin(2,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(2,0)\" /><br />";
+  out += "PIN 04 (<span id=\"stat3\">0</span>) : <input type=\"button\" value=\"ON\" onclick=\"setPin(3,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(3,0)\" /><br />";
+  out += "PIN 05 (<span id=\"stat4\">0</span>) : <input type=\"button\" value=\"ON\" onclick=\"setPin(4,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(4,0)\" /><br />";
+  out += "PIN 06 (<span id=\"stat5\">0</span>) : <input type=\"button\" value=\"ON\" onclick=\"setPin(5,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(5,0)\" /><br />";
+  out += "PIN 07 (<span id=\"stat6\">0</span>) : <input type=\"button\" value=\"ON\" onclick=\"setPin(6,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(6,0)\" /><br />";
+  out += "PIN 08 (<span id=\"stat7\">0</span>) : <input type=\"button\" value=\"ON\" onclick=\"setPin(7,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(7,0)\" /><br />";
+  out += "    </pre>";
   out += "    <script>";
-  out += "      function setPin(pin, stat) {";
+  out += "    function setPin(pin, stat) {";
   out += "        var xhttp = new XMLHttpRequest();";
+  out += "        xhttp.onreadystatechange = function() {";
+  out += "            if (this.readyState == 4 && this.status == 200) {";
+  out += "                var stats = JSON.parse(this.responseText);";
+  out += "                for(j = 0; j < stats.value.length; j++) {";
+  out += "                    document.getElementById(\"stat\" + j).innerHTML = stats.value[j];";
+  out += "                }";
+  out += "            }";
+  out += "        };";
   out += "        xhttp.open(\"GET\", \"/\" + stat + \"?p=\" + pin, true);";
   out += "        xhttp.send();";
-  out += "      }";
+  out += "    }";
+  out += "    var xhttp = new XMLHttpRequest();";
+  out += "    xhttp.onreadystatechange = function() {";
+  out += "        if (this.readyState == 4 && this.status == 200) {";
+  out += "            var stats = JSON.parse(this.responseText);";
+  out += "            for(j = 0; j < stats.value.length; j++) {";
+  out += "                document.getElementById(\"stat\" + j).innerHTML = stats.value[j];";
+  out += "            }";
+  out += "        }";
+  out += "    };";
+  out += "    xhttp.open(\"GET\", \"/\", true);";
+  out += "    xhttp.send();";
   out += "    </script>";
-  out += "    <pre>";
-  out += "      PIN 01 : <input type=\"button\" value=\"ON\" onclick=\"setPin(1,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(1,0)\" /><br />";
-  out += "      PIN 02 : <input type=\"button\" value=\"ON\" onclick=\"setPin(2,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(2,0)\" /><br />";
-  out += "      PIN 03 : <input type=\"button\" value=\"ON\" onclick=\"setPin(3,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(3,0)\" /><br />";
-  out += "      PIN 04 : <input type=\"button\" value=\"ON\" onclick=\"setPin(4,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(4,0)\" /><br />";
-  out += "      PIN 05 : <input type=\"button\" value=\"ON\" onclick=\"setPin(5,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(5,0)\" /><br />";
-  out += "      PIN 06 : <input type=\"button\" value=\"ON\" onclick=\"setPin(6,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(6,0)\" /><br />";
-  out += "      PIN 07 : <input type=\"button\" value=\"ON\" onclick=\"setPin(7,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(7,0)\" /><br />";
-  out += "      PIN 08 : <input type=\"button\" value=\"ON\" onclick=\"setPin(8,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(8,0)\" /><br />";
-  out += "    </pre>";
   out += "  </body>";
   out += "</html>";
   server.send(200, "text/html", out);
@@ -87,7 +106,14 @@ void handleNotFound(){
 }
 
 void setup(void){
-  if (isAP) {
+  pinMode(D0, INPUT);
+  for(int c = 0; c < sizeof(pin); c++) {
+    pinMode(pinMap[c], OUTPUT);
+    pin[c] = false;
+    handlePin(c, false);
+  }
+  
+  if (digitalRead(D0) == HIGH) {
     delay(1000);
     Serial.begin(115200);
     Serial.println();
@@ -114,12 +140,6 @@ void setup(void){
 
   if (MDNS.begin("esp8266")) {
     Serial.println("MDNS responder started");
-  }
-
-  for(int c = 0; c < sizeof(pin); c++) {
-    pinMode(pinMap[c], OUTPUT);
-    pin[c] = false;
-    handlePin(c, false);
   }
 
   server.on("/", [](){
