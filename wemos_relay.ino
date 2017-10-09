@@ -5,6 +5,8 @@
 
 const char* ssid = "SIHIPO"; /* wifi ssid */
 const char* password = "sistemhidroponik"; /* wifi psk */
+const char* ap_ssid = "SIHIPO_AP"; /* AP ssid */
+const char* ap_password = "sistemhidroponik"; /* AP psk */
 const String device_id = "C01";
 const String device_type = "SIHIPO_C";
 // const boolean isAP = true;
@@ -114,11 +116,10 @@ void setup(void){
   }
   
   if (digitalRead(D0) == HIGH) {
-    delay(1000);
     Serial.begin(115200);
     Serial.println();
     Serial.print("Configuring access point...");
-    WiFi.softAP(ssid, password);
+    WiFi.softAP(ap_ssid, ap_password);
   
     IPAddress myIP = WiFi.softAPIP();
     Serial.print("AP IP address: ");
