@@ -3,7 +3,7 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 
-const char* ssid = "Z2"; /* wifi ssid */
+const char* ssid = "SIHIPO"; /* wifi ssid */
 const char* password = "sistemhidroponik"; /* wifi psk */
 const char* ap_ssid = "SIHIPO_AP"; /* AP ssid */
 const char* ap_password = "sistemhidroponik"; /* AP psk */
@@ -13,7 +13,7 @@ const String device_type = "SIHIPO_C";
 ESP8266WebServer server(80);
 
 boolean pin[8];
-int pinMap[] = {D1, D2, D3, D4, D5, D6, D7, D8}; /* Physical PIN Mapping */
+int pinMap[] = {D1, D2, D3, D4, D8, D7, D6, D5}; /* Physical PIN Mapping */
 
 void handleRoot() {
   String out = "{\"id\":\"" + device_id + "\",\"type\":\"" + device_type + "\",\"value\":[";
@@ -109,7 +109,7 @@ void setup(void) {
     handlePin(c, false);
   }
 
-  if (digitalRead(D0) == LOW) {
+  if (digitalRead(D0) == HIGH) {
     Serial.begin(115200);
     Serial.println();
     Serial.print("Configuring access point...");
