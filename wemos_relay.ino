@@ -33,6 +33,7 @@ void handleRoot() {
 void handleUI() {
   String out = "";
   out += "<html>";
+  out += "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
   out += "  <body>";
   out += "    <pre>";
   out += "PIN 01 (<span id=\"stat0\">0</span>) : <input type=\"button\" value=\"ON\" onclick=\"setPin(0,1)\" /><input type=\"button\" value=\"OFF\" onclick=\"setPin(0,0)\" /><br />";
